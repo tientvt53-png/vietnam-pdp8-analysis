@@ -1,0 +1,99 @@
+---
+title: "Vietnam's Power Development Plan 8 (PDP8) Analysis"
+author: "Vu Thuy Tien Trinh"
+output: pdf_document
+---
+
+## Overview
+This report analyzes Vietnam's Power Development Plan 8 (PDP8), focusing on changes in installed capacity by energy source between 2030 and 2050.
+
+The analysis has two objectives:
+1. Describe the planned capacity structure.
+2. Visualize how Vietnam's power mix is expected to change over time.
+
+
+### Headline Metrics
+
+- Total Capacity 2030: 150 GW  
+- Total Capacity 2050: 573 GW  
+- Growth Factor: 3.8x
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE
+)
+
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(knitr)
+library(scales)
+```
+
+## 1. Descriptive Analysis
+
+```{r data_clean, include=FALSE}
+pdp8_data <- read.csv("vietnam_pdp8_data.csv") %>%
+  select(Energy_Source, Capacity_2030, Capacity_2050)
+
+total_2030 <- sum(pdp8_data$Capacity_2030)
+total_2050 <- sum(pdp8_data$Capacity_2050)
+
+analysis_table <- pdp8_data %>%
+  mutate(
+    share_2030 = Capacity_2030 / total_2030 * 100,
+    share_2050 = Capacity_2050 / total_2050 * 100
+  )
+```
+
+```{r table1, echo=FALSE}
+knitr::kable(
+  analysis_table,
+  digits = 2,
+  booktabs = TRUE,
+  caption = "Installed Capacity and Shares under Vietnam's PDP8",
+  align = "lrrrr"
+)
+```
+
+The dataset contains planned installed electricity generation capacity for six major energy source categories in 2030 and 2050.
+
+## 2. Data Visualization
+
+```{r plot_data, fig.width=11, fig.height=7, fig.align='center'}
+plot_data <- analysis_table %>%
+  select(Energy_Source, Capacity_2030, Capacity_2050) %>%
+  pivot_longer(
+    cols = starts_with("Capacity"),
+    names_to = "Year",
+    values_to = "MW"
+  ) %>%
+  mutate(Year = gsub("Capacity_", "", Year))
+
+ggplot(plot_data, aes(x = Year, y = MW, fill = Energy_Source)) +
+  geom_col(width = 0.6) +
+  scale_fill_brewer(palette = "Set2") +
+  scale_y_continuous(labels = label_comma()) +
+  labs(
+    title = "Vietnam's Power Mix Transformation (PDP8)",
+    subtitle = "Installed Capacity Growth: 2030 vs 2050",
+    x = "Year",
+    y = "Capacity (MW)",
+    fill = "Energy Source"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    plot.subtitle = element_text(size = 11),
+    legend.position = "right"
+  )
+```
+
+## 3. Key Findings
+
+- Total installed capacity increases substantially between 2030 and 2050.
+- Coal declines to zero by 2050 under the PDP8 pathway.
+- Solar and wind become major pillars of future electricity supply.
+- The results suggest a structural transition toward a lower-carbon power system.
